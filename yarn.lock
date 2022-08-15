@@ -1530,6 +1530,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@popperjs/core@npm:^2.11.6":
+  version: 2.11.6
+  resolution: "@popperjs/core@npm:2.11.6"
+  checksum: 47fb328cec1924559d759b48235c78574f2d71a8a6c4c03edb6de5d7074078371633b91e39bbf3f901b32aa8af9b9d8f82834856d2f5737a23475036b16817f0
+  languageName: node
+  linkType: hard
+
 "@sideway/address@npm:^4.1.3":
   version: 4.1.4
   resolution: "@sideway/address@npm:4.1.4"
@@ -1721,9 +1728,9 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*":
-  version: 18.7.2
-  resolution: "@types/node@npm:18.7.2"
-  checksum: 422cf95dea09959d0e809d24280b76948f60ea805e20d38f07bf9eeafeb413513b9cc365404766f7752bef9cafb8301a882d9d097f780e13f2bedf507459ebc5
+  version: 18.7.3
+  resolution: "@types/node@npm:18.7.3"
+  checksum: f51ed436a112235ac068d739b4823090a37b869cc186b64dd5c250dd285139c286990fcbeff2fb3ecba5d605fa885de4275247d332e5b96eafdfbb1da62e3ced
   languageName: node
   linkType: hard
 
@@ -2937,6 +2944,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bootstrap@npm:^5.2.0":
+  version: 5.2.0
+  resolution: "bootstrap@npm:5.2.0"
+  peerDependencies:
+    "@popperjs/core": ^2.11.5
+  checksum: 9dbfb5d26bbdac3e27a6b46cb7456cd4dd75ae3b48644737809885b8ea9c265d3359c4cdbf25a55bb7e5046f51e441557033ba21eeaf24ef8316bfbb3d420084
+  languageName: node
+  linkType: hard
+
 "brace-expansion@npm:^1.1.7":
   version: 1.1.11
   resolution: "brace-expansion@npm:1.1.11"
@@ -3090,9 +3106,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.0, caniuse-lite@npm:^1.0.30001370, caniuse-lite@npm:^1.0.30001373":
-  version: 1.0.30001375
-  resolution: "caniuse-lite@npm:1.0.30001375"
-  checksum: 6ed9cf7a3f80f5880cb021105864b869dddfdda8490559aa623e77feeca5ce8958a3b7c1cf37322e519176dcb488c99e6358b8c2de2aa4a0e08846ac122c4e75
+  version: 1.0.30001376
+  resolution: "caniuse-lite@npm:1.0.30001376"
+  checksum: bbb9e8f6d7430b3af8e03e03728637eb765feb6d591612b178f8e416db9098690fdefda00d741f21dc5297bc9aead51f4059769f3d19b15c2447eb818f993ce5
   languageName: node
   linkType: hard
 
@@ -3944,9 +3960,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.4.202":
-  version: 1.4.218
-  resolution: "electron-to-chromium@npm:1.4.218"
-  checksum: 165c468dc82e6160257e278a8821ee921a74c832ce9f2b53fe41f1618573a81fcdf4abc596d7b47d793b9cfae4129f1f1a5d5fd0ae15fbd25f99131938571269
+  version: 1.4.219
+  resolution: "electron-to-chromium@npm:1.4.219"
+  checksum: c743284c73a1c01fb845909d59fdbe86c8c3c0053a8c37a3c7e98521220434d28c2c5a3f540a154033f62477e2df3d85657ecec11a44c2c648879008af84378c
   languageName: node
   linkType: hard
 
@@ -5602,9 +5618,11 @@ __metadata:
   dependencies:
     "@babel/core": ^7.12.16
     "@babel/eslint-parser": ^7.12.16
+    "@popperjs/core": ^2.11.6
     "@vue/cli-plugin-babel": ~5.0.0
     "@vue/cli-plugin-eslint": ~5.0.0
     "@vue/cli-service": ~5.0.0
+    bootstrap: ^5.2.0
     core-js: ^3.8.3
     eslint: ^7.32.0
     eslint-plugin-vue: ^8.0.3
@@ -6014,21 +6032,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minipass@npm:^3.0.0, minipass@npm:^3.1.6":
+"minipass@npm:^3.0.0, minipass@npm:^3.1.1, minipass@npm:^3.1.6":
   version: 3.3.5
   resolution: "minipass@npm:3.3.5"
   dependencies:
     yallist: ^4.0.0
   checksum: f89f02bcaa0e0e4bb4c44ec796008e69fbca62db0aba6ead1bc57d25bdaefdf42102130f4f9ecb7d9c6b6cd35ff7b0c7b97d001d3435da8e629fb68af3aea57e
-  languageName: node
-  linkType: hard
-
-"minipass@npm:^3.1.1":
-  version: 3.3.4
-  resolution: "minipass@npm:3.3.4"
-  dependencies:
-    yallist: ^4.0.0
-  checksum: 5d95a7738c54852ba78d484141e850c792e062666a2d0c681a5ac1021275beb7e1acb077e59f9523ff1defb80901aea4e30fac10ded9a20a25d819a42916ef1b
   languageName: node
   linkType: hard
 
@@ -6641,13 +6650,13 @@ __metadata:
   linkType: hard
 
 "portfinder@npm:^1.0.26":
-  version: 1.0.29
-  resolution: "portfinder@npm:1.0.29"
+  version: 1.0.32
+  resolution: "portfinder@npm:1.0.32"
   dependencies:
     async: ^2.6.4
     debug: ^3.2.7
     mkdirp: ^0.5.6
-  checksum: b39cfb60334c79208dc30746fce5d241a9fa03a73b7f1b6b02972b17ee17579fb837a663a933607fb0f12a04f3a95c95aa50cde60836bae5b172588890cfb675
+  checksum: 116b4aed1b9e16f6d5503823d966d9ffd41b1c2339e27f54c06cd2f3015a9d8ef53e2a53b57bc0a25af0885977b692007353aa28f9a0a98a44335cb50487240d
   languageName: node
   linkType: hard
 
