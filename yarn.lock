@@ -51,7 +51,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/core@npm:^7.12.16":
+"@babel/core@npm:^7.12.16, @babel/core@npm:^7.18.10":
   version: 7.18.10
   resolution: "@babel/core@npm:7.18.10"
   dependencies:
@@ -2212,6 +2212,13 @@ __metadata:
     prettier:
       optional: true
   checksum: 70fee2289a4f54ec1be4d46136ee9b9893e31bf5622cead5be06c3dfb83449c3dbe6f8c03404625ccf302d0628ff9e2ea1debfae609d1bfe1d065d8f57c5dba8
+  languageName: node
+  linkType: hard
+
+"@vue/devtools-api@npm:^6.1.4":
+  version: 6.2.1
+  resolution: "@vue/devtools-api@npm:6.2.1"
+  checksum: 34765af0be9b0cc7e3def73b2792b1514e3c348852c5a7503fe07d013f0e907af6c27c0a32c0637dd748caf37c075af8e53ca3220433e0bd34b6f3405f358272
   languageName: node
   linkType: hard
 
@@ -5616,7 +5623,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "literal@workspace:."
   dependencies:
-    "@babel/core": ^7.12.16
+    "@babel/core": ^7.18.10
     "@babel/eslint-parser": ^7.12.16
     "@popperjs/core": ^2.11.6
     "@vue/cli-plugin-babel": ~5.0.0
@@ -5627,6 +5634,7 @@ __metadata:
     eslint: ^7.32.0
     eslint-plugin-vue: ^8.0.3
     vue: ^3.2.13
+    vue-router: 4
   languageName: unknown
   linkType: soft
 
@@ -8469,6 +8477,17 @@ __metadata:
   peerDependencies:
     webpack: ^4.1.0 || ^5.0.0-0
   checksum: a6eb675f07357a7d7181b78549e342c444b4e28896f84444506f940c14bdd7833276f50d645efcdc742ba987218745f965361921f99012fecf184e0aae67a4a0
+  languageName: node
+  linkType: hard
+
+"vue-router@npm:4":
+  version: 4.1.3
+  resolution: "vue-router@npm:4.1.3"
+  dependencies:
+    "@vue/devtools-api": ^6.1.4
+  peerDependencies:
+    vue: ^3.2.0
+  checksum: 92a827a05e3afd5cc6ff6a4d033abaefae098b60e4d128b402bebb88473ad8ca485e675a6f7df2a5598ba4a8a23a2652c0f7c55c2c57c4ac433ce75fb4672222
   languageName: node
   linkType: hard
 
