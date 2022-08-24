@@ -2,9 +2,14 @@ package main
 
 import (
 	"fmt"
+	"literal/internal/driver"
 	"log"
 	"net/http"
 	"os"
+
+	_ "github.com/jackc/pgconn"
+	_ "github.com/jackc/pgx/v4"
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 type config struct {
@@ -15,6 +20,7 @@ type application struct {
 	config   config
 	infoLog  *log.Logger
 	errorLog *log.Logger
+	db       *driver.DB
 }
 
 func main() {
@@ -24,13 +30,20 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 
+	dsn := "host=localhost port=5432 user=postgres password=postgres dbname=literal sslmode=disable timezone=UTC connect_timeout=5"
+	db, err := driver.ConnectPostgres(dsn)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
 	app := &application{
 		config:   cfg,
 		infoLog:  infoLog,
 		errorLog: errorLog,
+		db:       db,
 	}
 
-	err := app.serve()
+	err = app.serve()
 	if err != nil {
 		errorLog.Fatal(err)
 	}
