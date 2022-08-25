@@ -30,11 +30,12 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-	dsn := "host=localhost port=5432 user=postgres password=postgres dbname=literal sslmode=disable timezone=UTC connect_timeout=5"
+	dsn := os.Getenv("DSN")
 	db, err := driver.ConnectPostgres(dsn)
 	if err != nil {
 		errorLog.Fatal(err)
 	}
+	defer db.SQL.Close()
 
 	app := &application{
 		config:   cfg,
