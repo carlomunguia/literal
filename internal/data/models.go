@@ -74,3 +74,35 @@ func (u *User) GetAll() ([]*User, error) {
 	return users, nil
 
 }
+
+func (u *User) GetByEmail(email string) (*User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `select id, first_name, last_name, email, password, created_at, updated_at from users where email = $1`
+
+	row := db.QueryRowContext(ctx, query, email)
+	var user User
+	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (u *User) GetUserById(id int) (*User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `select id, first_name, last_name, email, password, created_at, updated_at from users where email = $1`
+
+	row := db.QueryRowContext(ctx, query, id)
+	var user User
+	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
