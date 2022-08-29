@@ -3,7 +3,10 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 const dbTimeout = time.Second * 3
@@ -99,6 +102,122 @@ func (u *User) GetUserById(id int) (*User, error) {
 
 	row := db.QueryRowContext(ctx, query, id)
 	var user User
+	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (u *User) Update() error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `update users set first_name = $1, last_name = $2, email = $3, updated_at = $4 where id = $5`
+
+	_, err := db.ExecContext(ctx, stmt, u.FirstName, u.LastName, u.Email, time.Now(), u.ID)
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
+}
+
+func (u *User) Delete() error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `delete from users where id = $1`
+
+	_, err := db.ExecContext(ctx, stmt, u.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *User) Insert(user User) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), 12)
+	if err != nil {
+		return 0, err
+	}
+	var id int
+	user.Password = string(hashedPass)
+
+	stmt := `insert into users (first_name, last_name, email, password, created_at, updated_at) values ($1, $2, $3, $4, $5, $6) returning id`
+
+	row := db.QueryRowContext(ctx, stmt, user.FirstName, user.LastName, user.Email, user.Password, time.Now(), time.Now())
+	err = row.Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func (u *User) ResetPassword(password string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return err
+	}
+	u.Password = string(hashedPass)
+
+	stmt := `update users set password = $1, updated_at = $2 where id = $3`
+
+	_, err = db.ExecContext(ctx, stmt, u.Password, time.Now(), u.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *User) PasswordMatch(password string) (bool, error) {
+	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
+	if err != nil {
+		switch {
+		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
+			return false, nil
+		default:
+			return false, err
+		}
+	}
+
+	return true, nil
+}
+
+func (t *Token) GetByToken(password string) (*Token, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `select id, user_id, email, token, token_hash, created at, updated_at, expiry from tokens where token = $1`
+
+	var token Token
+	row := db.QueryRowContext(ctx, query, password)
+	err := row.Scan(&token.ID, &token.UserID, &token.Email, &token.Token, &token.TokenHash, &token.CreatedAt, &token.UpdatedAt, &token.Expiry)
+	if err != nil {
+		return nil, err
+	}
+
+	return &token, nil
+}
+
+func (t *Token) GetUserForToken(token Token) (*User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	var user User
+	query := `select id, first_name, last_name, email, password, created_at, updated_at from users where id = $1`
+
+	row := db.QueryRowContext(ctx, query, token.UserID)
 	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
