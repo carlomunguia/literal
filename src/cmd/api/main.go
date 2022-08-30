@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"literal/internal/data"
-	"literal/internal/driver"
 	"log"
 	"net/http"
 	"os"
+
+	"literal/internal/data"
+	"literal/internal/driver"
 
 	_ "github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v4"
@@ -49,7 +50,6 @@ func main() {
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-
 }
 
 func (app *application) serve() error {

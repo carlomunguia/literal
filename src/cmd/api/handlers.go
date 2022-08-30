@@ -36,5 +36,4 @@ func (app *application) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.errorLog.Println(err)
 	}
-
 }

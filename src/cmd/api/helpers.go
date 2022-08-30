@@ -8,7 +8,6 @@ import (
 )
 
 func (app *application) readJSON(w http.ResponseWriter, r *http.Request, data interface{}) error {
-
 	maxBytes := 1048576 // 1MB
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 
@@ -28,7 +27,6 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, data in
 }
 
 func (app *application) writeJSON(w http.ResponseWriter, status int, data interface{}, headers ...http.Header) error {
-
 	out, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		app.errorLog.Println(err)
@@ -63,5 +61,4 @@ func (app *application) errorJSON(w http.ResponseWriter, err error, status ...in
 	payload.Message = err.Error()
 
 	app.writeJSON(w, statusCode, payload)
-
 }

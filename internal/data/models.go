@@ -2,8 +2,13 @@ package data
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/base32"
 	"errors"
+	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -75,7 +80,6 @@ func (u *User) GetAll() ([]*User, error) {
 	}
 
 	return users, nil
-
 }
 
 func (u *User) GetByEmail(email string) (*User, error) {
@@ -224,4 +228,62 @@ func (t *Token) GetUserForToken(token Token) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func (t *Token) GenerateToken(userID int, ttl time.Duration) (*Token, error) {
+	token := &Token{
+		UserID: userID,
+		Expiry: time.Now().Add(ttl),
+	}
+
+	randomBytes := make([]byte, 16)
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	token.Token = base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(randomBytes)
+
+	hash := sha256.Sum256(([]byte(token.Token)))
+
+	token.TokenHash = hash[:]
+
+	return token, nil
+}
+
+func (t *Token) AuthenticateToken(r *http.Request) (*User, error) {
+	authorizationHeader := r.Header.Get("Authorization")
+
+	if authorizationHeader == "" {
+		return nil, errors.New("authorization header is empty")
+	}
+
+	bearerToken := strings.Split(authorizationHeader, " ")
+	if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
+		return nil, errors.New("authorization header format is invalid")
+	}
+
+	token := bearerToken[1]
+
+	if token == "" {
+		return nil, errors.New("token is empty")
+	} else if len(token) != 26 {
+		return nil, errors.New("token is invalid size")
+	}
+
+	tkn, err := t.GetByToken(token)
+	if err != nil {
+		return nil, errors.New("token match failed")
+	}
+
+	if tkn.Expiry.Before(time.Now()) {
+		return nil, errors.New("token is expired")
+	}
+
+	user, err := t.GetUserForToken(*tkn)
+	if err != nil {
+		return nil, errors.New("no user found for token")
+	}
+
+	return user, nil
 }
