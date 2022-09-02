@@ -5,8 +5,9 @@ import (
 )
 
 type jsonResponse struct {
-	Error   bool   `json:"error"`
-	Message string `json:"message"`
+	Error   bool        `json:"error"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
 }
 
 type credentials struct {
