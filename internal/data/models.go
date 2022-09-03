@@ -199,15 +199,26 @@ func (u *User) PasswordMatch(password string) (bool, error) {
 	return true, nil
 }
 
-func (t *Token) GetByToken(password string) (*Token, error) {
+func (t *Token) GetByToken(plainText string) (*Token, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	query := `select id, user_id, email, token, token_hash, created at, updated_at, expiry from tokens where token = $1`
+	query := `select id, user_id, email, token, token_hash, created_at, updated_at, expiry
+			from tokens where token = $1`
 
 	var token Token
-	row := db.QueryRowContext(ctx, query, password)
-	err := row.Scan(&token.ID, &token.UserID, &token.Email, &token.Token, &token.TokenHash, &token.CreatedAt, &token.UpdatedAt, &token.Expiry)
+
+	row := db.QueryRowContext(ctx, query, plainText)
+	err := row.Scan(
+		&token.ID,
+		&token.UserID,
+		&token.Email,
+		&token.Token,
+		&token.TokenHash,
+		&token.CreatedAt,
+		&token.UpdatedAt,
+		&token.Expiry,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -266,10 +277,8 @@ func (t *Token) AuthenticateToken(r *http.Request) (*User, error) {
 
 	token := bearerToken[1]
 
-	if token == "" {
-		return nil, errors.New("token is empty")
-	} else if len(token) != 26 {
-		return nil, errors.New("token is invalid size")
+	if len(token) != 26 {
+		return nil, errors.New("token length is invalid")
 	}
 
 	tkn, err := t.GetByToken(token)
@@ -323,19 +332,19 @@ func (t *Token) DeleteByToken(token string) error {
 	return nil
 }
 
-func (t *Token) ValidToken(token string) (bool, error) {
-	tkn, err := t.GetByToken(token)
+func (t *Token) ValidToken(plainText string) (bool, error) {
+	token, err := t.GetByToken(plainText)
 	if err != nil {
-		return false, errors.New("token not found")
+		return false, errors.New("no matching token found")
 	}
 
-	_, err = t.GetUserForToken(*tkn)
+	_, err = t.GetUserForToken(*token)
 	if err != nil {
-		return false, errors.New("no user found for token")
+		return false, errors.New("no matching user found")
 	}
 
-	if tkn.Expiry.Before(time.Now()) {
-		return false, errors.New("token is expired")
+	if token.Expiry.Before(time.Now()) {
+		return false, errors.New("expired token")
 	}
 
 	return true, nil

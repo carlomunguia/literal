@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strings"
 )
 
 func (app *application) readJSON(w http.ResponseWriter, r *http.Request, data interface{}) error {
@@ -54,6 +55,43 @@ func (app *application) errorJSON(w http.ResponseWriter, err error, status ...in
 	statusCode := http.StatusBadRequest
 	if len(status) > 0 {
 		statusCode = status[0]
+	}
+
+	var customErr error
+
+	switch {
+	case strings.Contains(err.Error(), "SQLSTATE 23505"): // duplicate key value violates unique constraint
+		customErr = errors.New("duplicate key value violates unique constraint")
+		statusCode = http.StatusForbidden
+	case strings.Contains(err.Error(), "SQLSTATE 22001"): // value too long for type character varying(255)")
+		customErr = errors.New("value too long for type character varying(255)")
+		statusCode = http.StatusForbidden
+	case strings.Contains(err.Error(), "SQLSTATE 23503"): // insert or update on table \"users\" violates foreign key constraint \"users_role_id_fkey\"")
+		customErr = errors.New("insert or update on table \"users\" violates foreign key constraint \"users_role_id_fkey\"")
+		statusCode = http.StatusForbidden
+	default:
+		customErr = err
+	}
+
+	var payload jsonResponse
+	payload.Error = true
+	payload.Message = customErr.Error()
+
+	app.writeJSON(w, statusCode, customErr)
+}
+
+func (app *application) serverError(w http.ResponseWriter, err error) {
+	app.errorLog.Println(err)
+	app.writeJSON(w, http.StatusInternalServerError, err)
+}
+
+func (app *application) notFound(w http.ResponseWriter) {
+	app.writeJSON(w, http.StatusNotFound, nil)
+}
+
+func (app *application) methodNotAllowed(w http.ResponseWriter) {
+	app.writeJSON(w, http.StatusMethodNotAllowed, nil)
+}
 	}
 
 	var payload jsonResponse

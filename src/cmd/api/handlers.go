@@ -7,13 +7,15 @@ import (
 type jsonResponse struct {
 	Error   bool        `json:"error"`
 	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 type credentials struct {
 	Username string `json:"email"`
 	Password string `json:"password"`
 }
+
+type envelope map[string]interface{}
 
 func (app *application) Login(w http.ResponseWriter, r *http.Request) {
 	var creds credentials
