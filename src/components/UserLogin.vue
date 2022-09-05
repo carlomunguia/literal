@@ -8,6 +8,10 @@
           <text-input v-model="email" label="Email" type="email" name="email" required="true"></text-input>
           <text-input v-model="password" label="Password" type="password" name="password" required="true"></text-input>
           <hr />
+
+          Email: {{ email }}
+
+          <hr />
           <input type="submit" class="btn btn-primary" value="Login" />
         </form-tag>
       </div>
@@ -49,9 +53,9 @@
           .then((response) => response.json())
           .then((data) => {
             if (data.error) {
-              console.log("Error: " + data.error)
+              console.log("Error: " + data.message)
             } else {
-              console.log("Success: " + data.message)
+              console.log("Token: " + data.data.token.token)
             }
           })
       }
