@@ -22,6 +22,7 @@
 <script>
   import TextInput from './forms/TextInput.vue'
   import FormTag from './forms/FormTag.vue'
+  import { store } from './store.js'
   export default {
     name: 'UserLogin',
     components: {
@@ -31,7 +32,8 @@
     data() {
       return {
         email: '',
-        password: ''
+        password: '',
+        store,
       }
     },
     methods: {
@@ -56,6 +58,7 @@
               console.log("Error: " + data.message)
             } else {
               console.log("Token: " + data.data.token.token)
+              store.token = data.data.token.token
             }
           })
       }

@@ -11,10 +11,24 @@
           <router-link class="nav-link active" aria-current="page" to="/">Home</router-link>
         </li>
         <li class="nav-item">
-          <router-link class="nav-link" to="/login">Login</router-link>
+          <router-link v-if="store.token == ''" class="nav-link" to="/login">Login</router-link>
+          <router-link v-else class="nav-link" to="/logout">Logout</router-link>
         </li>
       </ul>
     </div>
   </div>
 </nav>
 </template>
+
+<script>
+
+import { store } from './store.js'
+
+export default {
+  data() {
+    return {
+      store
+    }
+  }
+}
+</script>
