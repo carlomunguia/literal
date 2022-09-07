@@ -8,10 +8,6 @@
           <text-input v-model="email" label="Email" type="email" name="email" required="true"></text-input>
           <text-input v-model="password" label="Password" type="password" name="password" required="true"></text-input>
           <hr />
-
-          Email: {{ email }}
-
-          <hr />
           <input type="submit" class="btn btn-primary" value="Login" />
         </form-tag>
       </div>
@@ -23,6 +19,9 @@
   import TextInput from './forms/TextInput.vue'
   import FormTag from './forms/FormTag.vue'
   import { store } from './store.js'
+  import router from './../router/index.js'
+  import notie from 'notie'
+
   export default {
     name: 'UserLogin',
     components: {
@@ -56,9 +55,11 @@
           .then((data) => {
             if (data.error) {
               console.log("Error: " + data.message)
+              notie.alert({ type: 'error', text: data.message })
             } else {
               console.log("Token: " + data.data.token.token)
               store.token = data.data.token.token
+              router.push('/')
             }
           })
       }
