@@ -21,6 +21,7 @@
   import { store } from './store.js'
   import router from './../router/index.js'
   import notie from 'notie'
+  import Security from './security.js'
 
   export default {
     name: 'UserLogin',
@@ -37,27 +38,18 @@
     },
     methods: {
       submitHandler() {
-        console.log("submitHandler")
 
         const payload = {
           email: this.email,
           password: this.password
         }
 
-        const requestOptions = {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }
-
-        fetch("http://localhost:8081/users/login", requestOptions)
+        fetch(process.env.LITERAL_API_URL + "/users/login", Security.requestOptions(payload))
           .then((response) => response.json())
           .then((data) => {
             if (data.error) {
-              console.log("Error: " + data.message)
               notie.alert({ type: 'error', text: data.message })
             } else {
-              console.log("Token: " + data.data.token.token)
               store.token = data.data.token.token
 
               store.user = {

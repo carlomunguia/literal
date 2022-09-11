@@ -52,6 +52,7 @@
 
 import { store } from './store.js'
 import router from './../router/index.js'
+import Security from './security.js'
 
 export default {
   data() {
@@ -65,13 +66,7 @@ export default {
         token: store.token
       }
 
-      const requestOptions = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }
-
-      fetch("http://localhost:8081/users/logout", requestOptions)
+      fetch(process.env.LITERAL_API_URL + "/users/logout", Security.requestOptions(payload))
         .then((response) => response.json())
         .then((response) => {
           if (response.error) {
