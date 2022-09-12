@@ -1,9 +1,7 @@
 <template>
   <div class="container">
     <div class="col">
-      <h1 class="mt-3">
-        Book Edit
-      </h1>
+      <h1 class="mt-3">Book Edit</h1>
     </div>
   </div>
 </template>
@@ -16,4 +14,4 @@
       Security.requireToken()
     }
   }
-  </script>
+</script>

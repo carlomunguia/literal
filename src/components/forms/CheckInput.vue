@@ -6,8 +6,7 @@
       :required="required"
       :checked="checked"
       :name="name"
-      :value="value"
-    />
+      :value="value" />
     <label class="form-check-label" :for="name">
       {{ label }}
     </label>
