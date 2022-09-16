@@ -106,7 +106,7 @@
           password: this.user.password
         }
 
-        fetch(`${process.env.VUE_APP_API_URL}/admin/users/save`, Security.requestOptions(payload))
+        fetch(`${process.env.VUE_APP_LITERAL_API_URL}/admin/users/save`, Security.requestOptions(payload))
           .then((response) => response.json())
           .then((data) => {
             if (data.error) {
