@@ -76,8 +76,19 @@
       Security.requireToken()
 
       if (parseInt(String(this.$route.params.userId), 10) > 0) {
-        // editing an existing user
-        // TODO - get user from database
+        fetch(
+          process.env.VUE_APP_LITERAL_API_URL + '/admin/users/get/' + this.$route.params.userId,
+          Security.requestOptions('')
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            if (data) {
+              this.user = data
+              this.user.password = ""
+            } else {
+              notie.alert({ type: 'error', text: data.message })
+            }
+          })
       }
     },
     data() {
@@ -106,7 +117,10 @@
           password: this.user.password
         }
 
-        fetch(`${process.env.VUE_APP_LITERAL_API_URL}/admin/users/save`, Security.requestOptions(payload))
+        fetch(
+          `${process.env.VUE_APP_LITERAL_API_URL}/admin/users/save`,
+          Security.requestOptions(payload)
+        )
           .then((response) => response.json())
           .then((data) => {
             if (data.error) {
