@@ -87,7 +87,7 @@
           .then((response) => response.json())
           .then((response) => {
             if (response.error) {
-              console.log(response.message)
+              this.$emit('error', response.message)
             } else {
               store.token = ''
               store.user = {}

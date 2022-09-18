@@ -1,7 +1,7 @@
 <template>
   <AppHeader />
   <div>
-    <router-view />
+    <router-view @success="success" @error="error" @warning="warning" />
   </div>
   <AppFooter />
 </template>
@@ -10,12 +10,13 @@
   import AppHeader from './components/AppHeader.vue'
   import AppFooter from './components/AppFooter.vue'
   import { store } from './components/store.js'
+  import notie from 'notie'
 
   const getCookie = (name) => {
-    return document.cookie.split("; ").reduce((r, v) => {
-      const parts = v.split("=");
-      return parts[0] === name ? decodeURIComponent(parts[1]) : r;
-    }, "");
+    return document.cookie.split('; ').reduce((r, v) => {
+      const parts = v.split('=')
+      return parts[0] === name ? decodeURIComponent(parts[1]) : r
+    }, '')
   }
 
   export default {
@@ -26,25 +27,35 @@
     },
     data() {
       return {
-        store,
+        store
       }
     },
     beforeMount() {
-      let data = getCookie("_site_data")
+      let data = getCookie('_site_data')
 
-      if (data !== "") {
+      if (data !== '') {
         let cookieData = JSON.parse(data)
         store.token = cookieData.token.token
         store.user = {
           id: cookieData.user.id,
           first_name: cookieData.user.first_name,
           last_name: cookieData.user.last_name,
-          email: cookieData.user.email,
+          email: cookieData.user.email
         }
+      }
+    },
+    methods: {
+      success(message) {
+        notie.alert({ type: 'success', text: message })
+      },
+      error(message) {
+        notie.alert({ type: 'error', text: message })
+      },
+      warning(message) {
+        notie.alert({ type: 'warning', text: message })
       }
     }
   }
-
 </script>
 
 <style></style>

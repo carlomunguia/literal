@@ -37,6 +37,7 @@
             v-model="user.password"
             type="password"
             label="Password"
+            help="Leave blank to keep current password"
             :value="user.password"
             name="password" />
           <hr />
@@ -53,7 +54,7 @@
               "
               class="btn btn-danger"
               href="javascript:void(0)"
-              @click="deleteUser"
+              @click="confirmDelete(this.user.id)"
               >Delete</a
             >
           </div>
@@ -84,9 +85,9 @@
           .then((data) => {
             if (data) {
               this.user = data
-              this.user.password = ""
+              this.user.password = ''
             } else {
-              notie.alert({ type: 'error', text: data.message })
+              this.$emit('error', data.message)
             }
           })
       }
@@ -124,25 +125,41 @@
           .then((response) => response.json())
           .then((data) => {
             if (data.error) {
-              notie.alert({
-                type: 'error',
-                text: data.message
-              })
+              this.$emit('error', data.message)
             } else {
-              notie.alert({
-                type: 'success',
-                text: 'Changes saved!'
-              })
+              this.$emit('success', 'Changes saved!')
+              this.$router.push('/admin/users')
             }
           })
           .catch((error) => {
-            notie.alert({
-              type: 'error',
-              text: error
-            })
+            this.$emit('error', error)
           })
       },
-      confirmDelete() {}
+      confirmDelete(id) {
+        notie.confirm({
+          text: 'Are you sure you want to delete this user?',
+          submitText: 'Delete',
+          submitCallback: () => {
+            let payload = {
+              id: id
+            }
+
+            fetch(
+              process.env.VUE_APP_LITERAL_API_URL + '/admin/users/delete',
+              Security.requestOptions(payload)
+            )
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.error) {
+                  this.$emit('error', data.message)
+                } else {
+                  this.$emit('success', 'User deleted!')
+                  this.$router.push('/admin/users')
+                }
+              })
+          }
+        })
+      }
     }
   }
 </script>

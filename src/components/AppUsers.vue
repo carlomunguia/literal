@@ -31,7 +31,6 @@
 
 <script>
   import Security from './security.js'
-  import notie from 'notie'
 
   export default {
     data() {
@@ -46,19 +45,13 @@
         .then((response) => response.json())
         .then((response) => {
           if (response.error) {
-            notie.alert({
-              type: 'error',
-              text: response.message
-            })
+            this.$emit('error', response.message)
           } else {
             this.users = response.data.users
           }
         })
         .catch((error) => {
-          notie.alert({
-            type: 'error',
-            text: error
-          })
+          this.$emit('error', error)
         })
     }
   }
