@@ -51,6 +51,11 @@ func (app *application) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if user.Active == 0 {
+		app.errorJSON(w, errors.New("user is not active"), http.StatusUnauthorized)
+		return
+	}
+
 	token, err := app.models.Token.GenerateToken(user.ID, 24*time.Hour)
 	if err != nil {
 		app.errorJSON(w, err)
@@ -142,6 +147,7 @@ func (app *application) EditUser(w http.ResponseWriter, r *http.Request) {
 		u.Email = user.Email
 		u.FirstName = user.FirstName
 		u.LastName = user.LastName
+		u.Active = user.Active
 
 		if err := u.Update(); err != nil {
 			app.errorJSON(w, err)
@@ -205,4 +211,39 @@ func (app *application) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = app.writeJSON(w, http.StatusOK, payload)
+}
+
+func (app *application) LogoutUserAndSetInactive(w http.ResponseWriter, r *http.Request) {
+	userID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	user, err := app.models.User.GetUserById(userID)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	user.Active = 0
+
+	err = user.Update()
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	err = app.models.Token.DeleteTokensForUser(userID)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	payload := jsonResponse{
+		Error:   false,
+		Message: "User logged out and set inactive",
+	}
+
+	_ = app.writeJSON(w, http.StatusAccepted, payload)
 }

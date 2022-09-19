@@ -25,6 +25,7 @@ type User struct {
 	LastName  string    `json:"last_name,omitempty"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
+	Active    int       `json:"active"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Token     Token     `json:"token"`
@@ -58,7 +59,13 @@ func (u *User) GetAll() ([]*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	query := `select id, first_name, last_name, email, password, created_at, updated_at from users order by last_name`
+	query := `select id, first_name, last_name, email, password, user_active, created_at, updated_at,
+	case
+		when (select count(id) from tokens t where user_id = users.id and t.expiry > now()) > 0 then 1
+		else 0
+	end as has_token
+
+	from users order by last_name`
 
 	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
@@ -71,7 +78,7 @@ func (u *User) GetAll() ([]*User, error) {
 
 	for rows.Next() {
 		var user User
-		err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+		err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.Active, &user.CreatedAt, &user.UpdatedAt, &user.Token.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -86,11 +93,11 @@ func (u *User) GetByEmail(email string) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	query := `select id, first_name, last_name, email, password, created_at, updated_at from users where email = $1`
+	query := `select id, first_name, last_name, email, password, user_active,  created_at, updated_at from users where email = $1`
 
 	row := db.QueryRowContext(ctx, query, email)
 	var user User
-	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.Active, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -102,12 +109,12 @@ func (u *User) GetUserById(id int) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	query := `select id, first_name, last_name, email, password, created_at, updated_at from users where id = $1`
+	query := `select id, first_name, last_name, email, password, user_active, created_at, updated_at from users where id = $1`
 
 	var user User
 	row := db.QueryRowContext(ctx, query, id)
 
-	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.Active, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +126,9 @@ func (u *User) Update() error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	stmt := `update users set first_name = $1, last_name = $2, email = $3, updated_at = $4 where id = $5`
+	stmt := `update users set first_name = $1, last_name = $2, email = $3, user_active = $4, updated_at = $5 where id = $6`
 
-	_, err := db.ExecContext(ctx, stmt, u.FirstName, u.LastName, u.Email, time.Now(), u.ID)
+	_, err := db.ExecContext(ctx, stmt, u.FirstName, u.LastName, u.Email, u.Active, time.Now(), u.ID)
 	if err != nil {
 		panic(err)
 	}
@@ -168,9 +175,9 @@ func (u *User) Insert(user User) (int, error) {
 	var id int
 	user.Password = string(hashedPass)
 
-	stmt := `insert into users (first_name, last_name, email, password, created_at, updated_at) values ($1, $2, $3, $4, $5, $6) returning id`
+	stmt := `insert into users (first_name, last_name, email, password, user_active, created_at, updated_at) values ($1, $2, $3, $4, $5, $6, $7) returning id`
 
-	row := db.QueryRowContext(ctx, stmt, user.FirstName, user.LastName, user.Email, user.Password, time.Now(), time.Now())
+	row := db.QueryRowContext(ctx, stmt, user.FirstName, user.LastName, user.Email, user.Password, user.Active, time.Now(), time.Now())
 	err = row.Scan(&id)
 	if err != nil {
 		return 0, err
@@ -245,10 +252,10 @@ func (t *Token) GetUserForToken(token Token) (*User, error) {
 	defer cancel()
 
 	var user User
-	query := `select id, first_name, last_name, email, password, created_at, updated_at from users where id = $1`
+	query := `select id, first_name, last_name, email, password, user_active, created_at, updated_at from users where id = $1`
 
 	row := db.QueryRowContext(ctx, query, token.UserID)
-	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.Active, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -309,6 +316,10 @@ func (t *Token) AuthenticateToken(r *http.Request) (*User, error) {
 		return nil, errors.New("no user found for token")
 	}
 
+	if user.Active == 0 {
+		return nil, errors.New("user is not active")
+	}
+
 	return user, nil
 }
 
@@ -362,4 +373,17 @@ func (t *Token) ValidToken(plainText string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (t *Token) DeleteTokensForUser(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `delete from tokens where user_id = $1`
+	_, err := db.ExecContext(ctx, stmt, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
