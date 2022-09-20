@@ -1,7 +1,12 @@
 <template>
   <AppHeader />
   <div>
-    <router-view @success="success" @error="error" @warning="warning" />
+    <router-view
+      :key="componentKey"
+      @success="success"
+      @error="error"
+      @warning="warning"
+      @forceUpdate="forceUpdate" />
   </div>
   <AppFooter />
 </template>
@@ -27,7 +32,8 @@
     },
     data() {
       return {
-        store
+        store,
+        componentKey: 0
       }
     },
     beforeMount() {
@@ -53,6 +59,9 @@
       },
       warning(message) {
         notie.alert({ type: 'warning', text: message })
+      },
+      forceUpdate() {
+        this.componentKey += 1
       }
     }
   }

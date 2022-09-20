@@ -32,7 +32,9 @@
               <span class="badge bg-danger">Inactive</span>
             </td>
             <td v-if="u.token.id > 0">
-              <span class="badge bg-success" @click="logUserOut(u.id)">Logged In</span>
+              <a href="javascript:void(0);">
+                <span class="badge bg-success" @click="logOutUser(u.id)">Logged in</span>
+              </a>
             </td>
             <td v-else>
               <span class="badge bg-danger">So Not Logged In</span>
@@ -74,31 +76,31 @@
         })
     },
     methods: {
-      logUserOut(id) {
+      logOutUser(id) {
         if (id !== store.user.id) {
           notie.confirm({
-            text: 'Are you sure you want to log this user out?',
-            submitText: 'Yes',
-            cancelText: 'No',
+            text: 'Are you certain you want to Log this user Out?',
+            submitText: 'Log Out',
+            cancelText: 'Cancel',
             submitCallback: () => {
+              console.log('Would log out user id', id)
               fetch(
-                process.env.VUE_APP_LITERAL_API_URL + '/admin/users/logout/' + id,
+                process.env.VUE_APP_LITERAL_API_URL + '/admin/log-out-user/' + id,
                 Security.requestOptions('')
               )
                 .then((response) => response.json())
-                .then((response) => {
-                  if (response.error) {
-                    this.$emit('error', response.message)
+                .then((data) => {
+                  if (data.error) {
+                    this.$emit('error', data.message)
                   } else {
-                    this.$emit('success', response.message)
-                    this.$router.go()
+                    this.$emit('success', data.message)
+                    this.$emit('forceUpdate')
                   }
-                })
-                .catch((error) => {
-                  this.$emit('error', error)
                 })
             }
           })
+        } else {
+          this.$emit('error', "You can't log yourself out, Yo!")
         }
       }
     }
