@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mozillazg/go-slugify"
 )
 
 type Book struct {
@@ -176,4 +178,21 @@ func (b *Book) genresForBook(id int) ([]Genre, error) {
 	}
 
 	return genres, nil
+}
+
+func (b *Book) Insert(book Book) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `insert into books (title, author_id, publication_year, slug, description, created_at, updated_at)
+  values ($1, $2, $3, $4, $5, $6, $7) returning id`
+
+	var id int
+	err := db.QueryRowContext(ctx, stmt,
+		book.Title, book.AuthorID, book.PublicationYear, slugify.Slugify(book.Title), book.Description, time.Now(), time.Now()).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
