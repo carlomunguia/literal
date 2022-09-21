@@ -1,12 +1,13 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import AppBody from './../components/AppBody.vue';
-import UserLogin from './../components/UserLogin.vue';
-import BooksList from './../components/BooksList.vue';
-import AppBook from './../components/AppBook.vue';
-import BooksAdmin from './../components/BooksAdmin.vue';
-import BookEdit from './../components/BookEdit.vue';
-import AppUsers from './../components/AppUsers.vue';
-import UserEdit from './../components/UserEdit.vue';
+import { createRouter, createWebHistory } from 'vue-router'
+import AppBody from './../components/AppBody.vue'
+import UserLogin from './../components/UserLogin.vue'
+import BooksList from './../components/BooksList.vue'
+import AppBook from './../components/AppBook.vue'
+import BooksAdmin from './../components/BooksAdmin.vue'
+import BookEdit from './../components/BookEdit.vue'
+import AppUsers from './../components/AppUsers.vue'
+import UserEdit from './../components/UserEdit.vue'
+import Security from './../components/security.js'
 
 const routes = [
   {
@@ -49,7 +50,12 @@ const routes = [
     name: 'User',
     component: UserEdit
   }
-];
+]
 
-const router = createRouter({ history: createWebHistory(), routes });
-export default router;
+const router = createRouter({ history: createWebHistory(), routes })
+
+router.beforeEach(() => {
+  Security.checkToken()
+})
+
+export default router

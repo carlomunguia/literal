@@ -247,3 +247,27 @@ func (app *application) LogoutUserAndSetInactive(w http.ResponseWriter, r *http.
 
 	_ = app.writeJSON(w, http.StatusAccepted, payload)
 }
+
+func (app *application) ValidateToken(w http.ResponseWriter, r *http.Request) {
+	var reqPayload struct {
+		Token string `json:"token"`
+	}
+
+	err := app.readJSON(w, r, &reqPayload)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	valid := false
+
+	valid, _ = app.models.Token.ValidToken(reqPayload.Token)
+
+	payload := jsonResponse{
+		Error:   false,
+		Message: "success",
+		Data:    valid,
+	}
+
+	_ = app.writeJSON(w, http.StatusOK, payload)
+}
