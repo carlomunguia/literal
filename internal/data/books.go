@@ -196,3 +196,48 @@ func (b *Book) Insert(book Book) (int, error) {
 
 	return id, nil
 }
+
+func (b *Book) Update() error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `update books set title = $1, author_id = $2, publication_year = $3, slug = $4, description = $5, updated_at = $6, where id = $7`
+
+	_, err := db.ExecContext(ctx, stmt,
+		b.Title, b.AuthorID, b.PublicationYear, slugify.Slugify(b.Title), b.Description, time.Now(), b.ID)
+	if err != nil {
+		return err
+	}
+
+	if len(b.Genres) > 0 {
+		stmt := `delete from book_genres where book_id = $1`
+		_, err := db.ExecContext(ctx, stmt, b.ID)
+		if err != nil {
+			return fmt.Errorf("book updated, but genres not updated: %s", err.Error())
+		}
+
+		for _, x := range b.Genres {
+			stmt := `insert into book_genres (book_id, genre_id, created_at, updated_at) values ($1, $2, $3, $4)`
+			_, err := db.ExecContext(ctx, stmt, b.ID, x.ID, time.Now(), time.Now())
+			if err != nil {
+				return fmt.Errorf("book updated, but genres not updated: %s", err.Error())
+			}
+		}
+	}
+
+	return nil
+}
+
+func (b *Book) DeleteByID(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `delete from books where id = $1`
+
+	_, err := db.ExecContext(ctx, stmt, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
