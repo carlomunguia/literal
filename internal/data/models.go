@@ -15,8 +15,10 @@ import (
 )
 
 type Models struct {
-	User  User
-	Token Token
+	User   User
+	Token  Token
+	Book   Book
+	Author Author
 }
 
 type User struct {
@@ -50,8 +52,10 @@ func New(dbPool *sql.DB) Models {
 	db = dbPool
 
 	return Models{
-		User:  User{},
-		Token: Token{},
+		User:   User{},
+		Token:  Token{},
+		Book:   Book{},
+		Author: Author{},
 	}
 }
 
