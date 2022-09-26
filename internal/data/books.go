@@ -42,6 +42,8 @@ func (b *Book) GetAll(genreIDs ...int) ([]*Book, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
+	// if we have params, we are limiting by genre,
+	// so build the where clause
 	where := ""
 	if len(genreIDs) > 0 {
 		var IDs []string
@@ -51,13 +53,13 @@ func (b *Book) GetAll(genreIDs ...int) ([]*Book, error) {
 		where = fmt.Sprintf("where b.id in (%s)", strings.Join(IDs, ","))
 	}
 
-	query := fmt.Sprintf(`
-    select b.id, b.title, b.author_id, b.publication_year, b.slug, b.description, b.created_at, b.updated_at,
-    a.id, a.author_name, a.created_at, a.updated_at,
-    from books b
-    left join authors a on (b.author_id = a.id)
-    %s
-    order by b.title`, where)
+	// (select array_to_string(array_agg(genre_id), ',') from books_genres where book_id = b.id)
+	query := fmt.Sprintf(`select b.id, b.title, b.author_id, b.publication_year, b.slug, b.description, b.created_at, b.updated_at,
+					a.id, a.author_name, a.created_at, a.updated_at
+					from books b
+					left join authors a on (b.author_id = a.id)
+					%s
+					order by b.title`, where)
 
 	var books []*Book
 
@@ -70,18 +72,27 @@ func (b *Book) GetAll(genreIDs ...int) ([]*Book, error) {
 	for rows.Next() {
 		var book Book
 		err := rows.Scan(
-			&book.ID, &book.Title, &book.AuthorID, &book.PublicationYear, &book.Slug, &book.Description, &book.CreatedAt, &book.UpdatedAt,
-			&book.Author.ID, &book.Author.AuthorName, &book.Author.CreatedAt, &book.Author.UpdatedAt,
-		)
+			&book.ID,
+			&book.Title,
+			&book.AuthorID,
+			&book.PublicationYear,
+			&book.Slug,
+			&book.Description,
+			&book.CreatedAt,
+			&book.UpdatedAt,
+			&book.Author.ID,
+			&book.Author.AuthorName,
+			&book.Author.CreatedAt,
+			&book.Author.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
 
+		// get genres
 		genres, err := b.genresForBook(book.ID)
 		if err != nil {
 			return nil, err
 		}
-
 		book.Genres = genres
 
 		books = append(books, &book)
@@ -159,7 +170,7 @@ func (b *Book) genresForBook(id int) ([]Genre, error) {
 	var genres []Genre
 
 	query := `select id, genre_name, created_at, updated_at from genres where id in
-  (select genre_id from book_genres where book_id = $1)`
+  (select genre_id from books_genres where book_id = $1)`
 
 	genreRows, err := db.QueryContext(ctx, query, id)
 	if err != nil && err != sql.ErrNoRows {
@@ -210,14 +221,14 @@ func (b *Book) Update() error {
 	}
 
 	if len(b.Genres) > 0 {
-		stmt := `delete from book_genres where book_id = $1`
+		stmt := `delete from books_genres where book_id = $1`
 		_, err := db.ExecContext(ctx, stmt, b.ID)
 		if err != nil {
 			return fmt.Errorf("book updated, but genres not updated: %s", err.Error())
 		}
 
 		for _, x := range b.Genres {
-			stmt := `insert into book_genres (book_id, genre_id, created_at, updated_at) values ($1, $2, $3, $4)`
+			stmt := `insert into books_genres (book_id, genre_id, created_at, updated_at) values ($1, $2, $3, $4)`
 			_, err := db.ExecContext(ctx, stmt, b.ID, x.ID, time.Now(), time.Now())
 			if err != nil {
 				return fmt.Errorf("book updated, but genres not updated: %s", err.Error())

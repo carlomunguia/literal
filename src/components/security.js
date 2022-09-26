@@ -22,7 +22,7 @@ let Security = {
       headers: headers
     }
   },
-  checkToken: function (token) {
+  checkToken: function () {
     if (store.token !== '') {
       const payload = {
         token: store.token

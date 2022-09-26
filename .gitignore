@@ -33,4 +33,5 @@ pnpm-debug.log*
 *.yml
 /db-data
 Makefile
+static/covers
 

@@ -37,5 +37,8 @@ func (app *application) routes() http.Handler {
 		mux.Post("/log-out-user/{id}", app.LogoutUserAndSetInactive)
 	})
 
+	fileServer := http.FileServer(http.Dir("./static/"))
+	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))
+
 	return mux
 }
