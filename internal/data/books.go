@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/mozillazg/go-slugify"
@@ -20,6 +18,7 @@ type Book struct {
 	Author          Author    `json:"author"`
 	Description     string    `json:"description"`
 	Genres          []Genre   `json:"genres"`
+	GenreIDs        []int     `json:"genre_ids,omitempty"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }
@@ -38,28 +37,15 @@ type Genre struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func (b *Book) GetAll(genreIDs ...int) ([]*Book, error) {
+func (b *Book) GetAll() ([]*Book, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	// if we have params, we are limiting by genre,
-	// so build the where clause
-	where := ""
-	if len(genreIDs) > 0 {
-		var IDs []string
-		for _, x := range genreIDs {
-			IDs = append(IDs, strconv.Itoa(x))
-		}
-		where = fmt.Sprintf("where b.id in (%s)", strings.Join(IDs, ","))
-	}
-
-	// (select array_to_string(array_agg(genre_id), ',') from books_genres where book_id = b.id)
-	query := fmt.Sprintf(`select b.id, b.title, b.author_id, b.publication_year, b.slug, b.description, b.created_at, b.updated_at,
-					a.id, a.author_name, a.created_at, a.updated_at
-					from books b
-					left join authors a on (b.author_id = a.id)
-					%s
-					order by b.title`, where)
+	query := `select b.id, b.title, b.author_id, b.publication_year, b.slug, b.description, b.created_at, b.updated_at,
+			a.id, a.author_name, a.created_at, a.updated_at
+			from books b
+			left join authors a on (b.author_id = a.id)
+			order by b.title`
 
 	var books []*Book
 
@@ -89,11 +75,67 @@ func (b *Book) GetAll(genreIDs ...int) ([]*Book, error) {
 		}
 
 		// get genres
-		genres, err := b.genresForBook(book.ID)
+		genres, ids, err := b.genresForBook(book.ID)
 		if err != nil {
 			return nil, err
 		}
 		book.Genres = genres
+		book.GenreIDs = ids
+
+		books = append(books, &book)
+	}
+
+	return books, nil
+}
+
+func (b *Book) GetAllPaginated(page, pageSize int) ([]*Book, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	limit := pageSize
+	offset := (page - 1) * pageSize
+
+	query := `select b.id, b.title, b.author_id, b.publication_year, b.slug, b.description, b.created_at, b.updated_at,
+			a.id, a.author_name, a.created_at, a.updated_at
+			from books b
+			left join authors a on (b.author_id = a.id)
+			order by b.title
+			limit $1 offset $2`
+
+	var books []*Book
+
+	rows, err := db.QueryContext(ctx, query, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var book Book
+		err := rows.Scan(
+			&book.ID,
+			&book.Title,
+			&book.AuthorID,
+			&book.PublicationYear,
+			&book.Slug,
+			&book.Description,
+			&book.CreatedAt,
+			&book.UpdatedAt,
+			&book.Author.ID,
+			&book.Author.AuthorName,
+			&book.Author.CreatedAt,
+			&book.Author.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		// get genres
+		genres, ids, err := b.genresForBook(book.ID)
+		if err != nil {
+			return nil, err
+		}
+		book.Genres = genres
+		book.GenreIDs = ids
 
 		books = append(books, &book)
 	}
@@ -106,28 +148,39 @@ func (b *Book) GetBookById(id int) (*Book, error) {
 	defer cancel()
 
 	query := `select b.id, b.title, b.author_id, b.publication_year, b.slug, b.description, b.created_at, b.updated_at,
-  a.id, a.author_name, a.created_at, a.updated_at,
-  from books b
-  left join authors a on (b.author_id = a.id)
-  where b.id = $1`
+			a.id, a.author_name, a.created_at, a.updated_at
+			from books b
+			left join authors a on (b.author_id = a.id)
+			where b.id = $1`
 
 	row := db.QueryRowContext(ctx, query, id)
 
 	var book Book
 
 	err := row.Scan(
-		&book.ID, &book.Title, &book.AuthorID, &book.PublicationYear, &book.Slug, &book.Description, &book.CreatedAt, &book.UpdatedAt,
-		&book.Author.ID, &book.Author.AuthorName, &book.Author.CreatedAt, &book.Author.UpdatedAt)
+		&book.ID,
+		&book.Title,
+		&book.AuthorID,
+		&book.PublicationYear,
+		&book.Slug,
+		&book.Description,
+		&book.CreatedAt,
+		&book.UpdatedAt,
+		&book.Author.ID,
+		&book.Author.AuthorName,
+		&book.Author.CreatedAt,
+		&book.Author.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 
-	genres, err := b.genresForBook(id)
+	// get genres
+	genres, ids, err := b.genresForBook(book.ID)
 	if err != nil {
 		return nil, err
 	}
-
 	book.Genres = genres
+	book.GenreIDs = ids
 
 	return &book, nil
 }
@@ -137,44 +190,56 @@ func (b *Book) GetBookBySlug(slug string) (*Book, error) {
 	defer cancel()
 
 	query := `select b.id, b.title, b.author_id, b.publication_year, b.slug, b.description, b.created_at, b.updated_at,
-  a.id, a.author_name, a.created_at, a.updated_at,
-  from books b
-  left join authors a on (b.author_id = a.id)
-  where b.slug = $1`
+			a.id, a.author_name, a.created_at, a.updated_at
+			from books b
+			left join authors a on (b.author_id = a.id)
+			where b.slug = $1`
 
 	row := db.QueryRowContext(ctx, query, slug)
 
 	var book Book
 
 	err := row.Scan(
-		&book.ID, &book.Title, &book.AuthorID, &book.PublicationYear, &book.Slug, &book.Description, &book.CreatedAt, &book.UpdatedAt,
-		&book.Author.ID, &book.Author.AuthorName, &book.Author.CreatedAt, &book.Author.UpdatedAt)
+		&book.ID,
+		&book.Title,
+		&book.AuthorID,
+		&book.PublicationYear,
+		&book.Slug,
+		&book.Description,
+		&book.CreatedAt,
+		&book.UpdatedAt,
+		&book.Author.ID,
+		&book.Author.AuthorName,
+		&book.Author.CreatedAt,
+		&book.Author.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 
-	genres, err := b.genresForBook(book.ID)
+	// get genres
+	genres, ids, err := b.genresForBook(book.ID)
 	if err != nil {
 		return nil, err
 	}
-
 	book.Genres = genres
+	book.GenreIDs = ids
 
 	return &book, nil
 }
 
-func (b *Book) genresForBook(id int) ([]Genre, error) {
+func (b *Book) genresForBook(id int) ([]Genre, []int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
 	var genres []Genre
+	var genreIDs []int
 
 	query := `select id, genre_name, created_at, updated_at from genres where id in
   (select genre_id from books_genres where book_id = $1)`
 
 	genreRows, err := db.QueryContext(ctx, query, id)
 	if err != nil && err != sql.ErrNoRows {
-		return nil, err
+		return nil, nil, err
 	}
 	defer genreRows.Close()
 
@@ -182,13 +247,14 @@ func (b *Book) genresForBook(id int) ([]Genre, error) {
 	for genreRows.Next() {
 		err := genreRows.Scan(&genre.ID, &genre.GenreName, &genre.CreatedAt, &genre.UpdatedAt)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		genres = append(genres, genre)
+		genreIDs = append(genreIDs, genre.ID)
 	}
 
-	return genres, nil
+	return genres, genreIDs, nil
 }
 
 func (b *Book) Insert(book Book) (int, error) {
