@@ -60,7 +60,7 @@
 
       <div>
         <div class="card-group">
-          <div class="p-3 d-flex flex-wrap">
+          <transition-group class="p-3 d-flex flex-wrap" tag="div" appear name="books">
             <div v-for="b in this.books" :key="b.id">
               <div
                 class="card me-2 ms-1 mb-3"
@@ -87,7 +87,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </transition-group>
         </div>
       </div>
     </div>
@@ -148,11 +148,33 @@
     border: 1px solid silver;
   }
 
-  .filter:active {
+  .filter.active {
     background: lightgreen;
   }
 
   .filter:hover {
     background: lightgray;
+  }
+
+  .filters {
+    height: 2.5em;
+  }
+
+  .books-move {
+    transition: all 500ms ease-in-out 50ms;
+  }
+
+  .books-enter-active {
+    transition: all 500ms ease-in-out;
+  }
+
+  .books-leave-active {
+    transition: all 500ms ease-in;
+  }
+
+  .books-enter,
+  .books-leave-to {
+    opacity: 0;
+    transform: translateY(30px);
   }
 </style>
