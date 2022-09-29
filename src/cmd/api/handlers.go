@@ -287,3 +287,21 @@ func (app *application) AllBooks(w http.ResponseWriter, r *http.Request) {
 
 	app.writeJSON(w, http.StatusOK, payload)
 }
+
+func (app *application) SingleBook(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+
+	book, err := app.models.Book.GetBookBySlug(slug)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	payload := jsonResponse{
+		Error:   false,
+		Message: "success",
+		Data:    envelope{"book": book},
+	}
+
+	app.writeJSON(w, http.StatusOK, payload)
+}
