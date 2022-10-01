@@ -52,6 +52,7 @@
   import notie from 'notie'
 
   export default {
+    name: 'AppUsers',
     data() {
       return {
         users: [],

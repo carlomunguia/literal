@@ -99,6 +99,7 @@
   import { store } from '@/components/store'
 
   export default {
+    name: 'BooksList',
     data() {
       return {
         store,

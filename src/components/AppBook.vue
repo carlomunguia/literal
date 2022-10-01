@@ -33,6 +33,7 @@
 
 <script>
   export default {
+    name: 'AppBook',
     data() {
       return {
         book: {},
@@ -40,7 +41,7 @@
         ready: false
       }
     },
-    activated() {
+    mounted() {
       fetch(process.env.VUE_APP_LITERAL_API_URL + '/books/' + this.$route.params.bookName)
         .then((response) => response.json())
         .then((data) => {
@@ -51,7 +52,6 @@
             this.book = data.data.book
           }
         })
-    },
-    deactivated() {}
+    }
   }
 </script>

@@ -17,17 +17,17 @@ const routes = [
   },
   {
     path: '/login',
-    name: 'Login',
+    name: 'UserLogin',
     component: UserLogin
   },
   {
     path: '/books',
-    name: 'Books',
+    name: 'BooksList',
     component: BooksList
   },
   {
     path: '/books/:bookName',
-    name: 'Book',
+    name: 'AppBook',
     component: AppBook
   },
   {
@@ -42,12 +42,12 @@ const routes = [
   },
   {
     path: '/admin/users',
-    name: 'Users',
+    name: 'AppUsers',
     component: AppUsers
   },
   {
     path: '/admin/users/:userId',
-    name: 'User',
+    name: 'UserEdit',
     component: UserEdit
   }
 ]

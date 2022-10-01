@@ -92,6 +92,7 @@
   import { store } from './store'
 
   export default {
+    name: 'UserEdit',
     beforeMount() {
       Security.requireToken()
 
