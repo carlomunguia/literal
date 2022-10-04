@@ -62,6 +62,38 @@
             id="description"
             rows="3"></textarea>
         </div>
+
+        <div class="mb-3">
+          <label for="genres" class="form-label">Genres</label>
+          <select
+            ref="genres"
+            id="genres"
+            class="form-select"
+            required
+            size="7"
+            v-model="this.book.genre_ids"
+            multiple>
+            <option v-for="g in this.genres" :value="g.value" :key="g.value">
+              {{ g.text }}
+            </option>
+          </select>
+        </div>
+
+        <hr />
+
+        <div class="float-start">
+          <input type="submit" class="btn btn-primary me-2" value="Save" />
+          <router-link to="/admin/books" class="btn btn-outline-secondary">Cancel</router-link>
+        </div>
+        <div class="float-end mt-2">
+          <a
+            v-if="this.book.id > 0"
+            class="btn btn-danger"
+            href="javascript:void(0);"
+            @click="confirmDelete(this.book.id)">
+            Delete
+          </a>
+        </div>
       </form-tag>
     </div>
   </div>
@@ -99,7 +131,15 @@
         },
         authors: [],
         imgPath: process.env.VUE_APP_LITERAL_IMAGE_URL,
-        genres: []
+        genres: [
+          { value: 1, text: 'Science Fiction' },
+          { value: 2, text: 'Fantasy' },
+          { value: 3, text: 'Romance' },
+          { value: 4, text: 'Thriller' },
+          { value: 5, text: 'Mystery' },
+          { value: 6, text: 'Horror' },
+          { value: 7, text: 'Classic' }
+        ]
       }
     },
     methods: {
@@ -113,7 +153,8 @@
         reader.onload = () => {
           this.book.cover = reader.result
         }
-      }
+      },
+      confirmDelete: {}
     }
   }
 </script>
