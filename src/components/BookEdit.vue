@@ -104,7 +104,7 @@
   import FormTag from '@/components/forms/FormTag.vue'
   import TextInput from '@/components/forms/TextInput.vue'
   import SelectInput from '@/components/forms/SelectInput.vue'
-  // import notie from 'notie'
+  import notie from 'notie'
 
   export default {
     name: 'BookEdit',
@@ -143,18 +143,71 @@
       }
     },
     methods: {
-      submitHandler: function (data) {
-        console.log(data)
+      submitHandler() {
+        const payload = {
+          id: this.book.id,
+          title: this.book.title,
+          author_id: this.book.author_id,
+          publication_year: this.book.publication_year,
+          description: this.book.description,
+          cover: this.book.cover,
+          slug: this.book.slug,
+          genre_ids: this.book.genre_ids
+        }
+
+        fetch(
+          `${process.env.VUE_APP_LITERAL_API}/admin/books/save`,
+          Security.requestOptions(payload)
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.error) {
+              this.$emit('error', data.message)
+            } else {
+              this.$emit('success', data.message)
+              this.$router.push('/admin/books')
+            }
+          })
+          .catch((error) => {
+            this.$emit('error', error)
+          })
       },
       loadCoverImage: function (event) {
-        const file = event.target.files[0]
+        const file = this.$refs.coverInput.files[0]
         const reader = new FileReader()
-        reader.readAsDataURL(file)
-        reader.onload = () => {
-          this.book.cover = reader.result
+        reader.onloadend = () => {
+          const base64 = reader.result.replace('data:', '').replace(/^.+,/, '')
+          this.book.cover = base64
+          alert(base64)
         }
+        reader.readAsDataURL(file)
       },
-      confirmDelete: {}
+      confirmDelete(id) {
+        console.log(id)
+        notie.confirm({
+          text: 'Are you sure you want to delete this book?',
+          submitText: 'Delete',
+          submitCallback: () => {
+            let payload = {
+              id: id
+            }
+
+            fetch(
+              process.env.VUE_APP_LITERAL_API + '/admin/books/delete',
+              Security.requestOptions(payload)
+            )
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.error) {
+                  this.$emit('error', data.message)
+                } else {
+                  this.$emit('success', data.message)
+                  this.$router.push('/admin/books')
+                }
+              })
+          }
+        })
+      }
     }
   }
 </script>
