@@ -305,3 +305,34 @@ func (app *application) SingleBook(w http.ResponseWriter, r *http.Request) {
 
 	app.writeJSON(w, http.StatusOK, payload)
 }
+
+func (app *application) AllAuthors(w http.ResponseWriter, r *http.Request) {
+	all, error := app.models.Author.GetAllAuthors()
+	if error != nil {
+		app.errorJSON(w, error)
+		return
+	}
+
+	type selectData struct {
+		Value int    `json:"value"`
+		Text  string `json:"text"`
+	}
+
+	var authors []selectData
+
+	for _, x := range all {
+		author := selectData{
+			Value: x.ID,
+			Text:  x.AuthorName,
+		}
+
+		authors = append(authors, author)
+	}
+
+	payload := jsonResponse{
+		Error: false,
+		Data:  authors,
+	}
+
+	app.writeJSON(w, http.StatusOK, payload)
+}
