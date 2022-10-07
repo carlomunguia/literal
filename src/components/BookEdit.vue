@@ -110,6 +110,22 @@
     name: 'BookEdit',
     beforeMount() {
       Security.requireToken()
+
+      if (this.$route.params.bookId > 0) {
+        //edit a book
+      } else {
+        // add a book
+      }
+
+      fetch(process.env.VUE_APP_LITERAL_API_URL + '/admin/authors/all', Security.requestOptions(''))
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.error) {
+            this.$emit('error', data.message)
+          } else {
+            this.authors = data.data
+          }
+        })
     },
     components: {
       'form-tag': FormTag,
