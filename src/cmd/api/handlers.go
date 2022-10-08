@@ -1,15 +1,21 @@
 package main
 
 import (
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
 	"literal/internal/data"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/mozillazg/go-slugify"
 )
+
+var staticPath = "./static/"
 
 type jsonResponse struct {
 	Error   bool        `json:"error"`
@@ -335,4 +341,66 @@ func (app *application) AllAuthors(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.writeJSON(w, http.StatusOK, payload)
+}
+
+func (app *application) EditBook(w http.ResponseWriter, r *http.Request) {
+	var reqPayload struct {
+		ID              int    `json:"id"`
+		Title           string `json:"title"`
+		AuthorID        int    `json:"author_id"`
+		PublicationYear int    `json:"publication_year"`
+		Description     string `json:"description"`
+		CoverBase64     string `json:"cover"`
+		GenreIDs        []int  `json:"genre_ids"`
+	}
+
+	err := app.readJSON(w, r, &reqPayload)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	book := data.Book{
+		ID:              reqPayload.ID,
+		Title:           reqPayload.Title,
+		AuthorID:        reqPayload.AuthorID,
+		PublicationYear: reqPayload.PublicationYear,
+		Description:     reqPayload.Description,
+		Slug:            slugify.Slugify(reqPayload.Title),
+		GenreIDs:        reqPayload.GenreIDs,
+	}
+
+	if len(reqPayload.CoverBase64) > 0 {
+		decoded, err := base64.StdEncoding.DecodeString(reqPayload.CoverBase64)
+		if err != nil {
+			app.errorJSON(w, err)
+			return
+		}
+
+		if err := os.WriteFile(fmt.Sprintf("%s/covers/%s.jpg", staticPath, book.Slug), decoded, 0o666); err != nil {
+			app.errorJSON(w, err)
+			return
+		}
+
+		if book.ID == 0 {
+			_, err = app.models.Book.Insert(book)
+			if err != nil {
+				app.errorJSON(w, err)
+				return
+			}
+		} else {
+			err := book.Update()
+			if err != nil {
+				app.errorJSON(w, err)
+				return
+			}
+		}
+
+		payload := jsonResponse{
+			Error:   false,
+			Message: "Book updated",
+		}
+
+		app.writeJSON(w, http.StatusAccepted, payload)
+	}
 }

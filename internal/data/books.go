@@ -323,7 +323,7 @@ func (a *Author) GetAllAuthors() ([]*Author, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	query := `select id, author_name, created_at, updated_at  from authors order by author_name`
+	query := `select id, author_name, created_at, updated_at from authors order by author_name`
 	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err

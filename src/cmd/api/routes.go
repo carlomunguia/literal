@@ -38,6 +38,7 @@ func (app *application) routes() http.Handler {
 		mux.Post("/log-out-user/{id}", app.LogoutUserAndSetInactive)
 
 		mux.Post("/authors/all", app.AllAuthors)
+		mux.Post("/books/save", app.EditBook)
 	})
 
 	fileServer := http.FileServer(http.Dir("./static/"))
