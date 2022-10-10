@@ -39,6 +39,7 @@ func (app *application) routes() http.Handler {
 
 		mux.Post("/authors/all", app.AllAuthors)
 		mux.Post("/books/save", app.EditBook)
+		mux.Post("/books/{id}", app.BookById)
 	})
 
 	fileServer := http.FileServer(http.Dir("./static/"))

@@ -382,20 +382,6 @@ func (app *application) EditBook(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if book.ID == 0 {
-			_, err = app.models.Book.Insert(book)
-			if err != nil {
-				app.errorJSON(w, err)
-				return
-			}
-		} else {
-			err := book.Update()
-			if err != nil {
-				app.errorJSON(w, err)
-				return
-			}
-		}
-
 		payload := jsonResponse{
 			Error:   false,
 			Message: "Book updated",
@@ -403,4 +389,40 @@ func (app *application) EditBook(w http.ResponseWriter, r *http.Request) {
 
 		app.writeJSON(w, http.StatusAccepted, payload)
 	}
+
+	if book.ID == 0 {
+		_, err = app.models.Book.Insert(book)
+		if err != nil {
+			app.errorJSON(w, err)
+			return
+		}
+	} else {
+		err := book.Update()
+		if err != nil {
+			app.errorJSON(w, err)
+			return
+		}
+	}
+}
+
+func (app *application) BookById(w http.ResponseWriter, r *http.Request) {
+	bookID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	book, err := app.models.Book.GetBookById(bookID)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	payload := jsonResponse{
+		Error:   false,
+		Message: "success",
+		Data:    book,
+	}
+
+	app.writeJSON(w, http.StatusOK, payload)
 }

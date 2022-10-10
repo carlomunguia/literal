@@ -47,7 +47,7 @@
 
         <text-input
           v-model="book.publication_year"
-          type="text"
+          type="number"
           required="true"
           label="Publication Year"
           :value="book.publication_year"
@@ -112,7 +112,21 @@
       Security.requireToken()
 
       if (this.$route.params.bookId > 0) {
-        //edit a book
+        fetch(process.env.VUE_APP_LITERAL_API_URL + "/admin/books/" + this.$route.params.bookId, Security.requestOptions(""))
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.error) {
+            this.$emit('error', data.error)
+          } else {
+            this.book = data.data
+            let genreArr = []
+            for (let i = 0; i < this.book.genres.length; i++) {
+              genreArr.push(this.book.genres[i].id)
+            }
+            this.book.genre_ids = genreArr
+          }
+        })
+
       } else {
         // add a book
       }
@@ -138,7 +152,7 @@
           id: 0,
           title: '',
           author_id: 0,
-          publication_year: 0,
+          publication_year: null,
           description: '',
           cover: '',
           slug: '',
@@ -164,7 +178,7 @@
           id: this.book.id,
           title: this.book.title,
           author_id: this.book.author_id,
-          publication_year: this.book.publication_year,
+          publication_year: parseInt(this.book.publication_year),
           description: this.book.description,
           cover: this.book.cover,
           slug: this.book.slug,
@@ -227,3 +241,8 @@
     }
   }
 </script>
+<style scoped>
+  .book-cover {
+    max-width: 10em;
+  }
+</style>
