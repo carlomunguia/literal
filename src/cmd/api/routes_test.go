@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func Test_If_Routes_exist(t *testing.T) {
+func Test_If_Routes_Exist(t *testing.T) {
 	testRoutes := testApp.routes()
 	chiRoutes := testRoutes.(chi.Router)
 
