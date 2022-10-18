@@ -8,7 +8,7 @@
       @error="error"
       @warning="warning"
       @forceUpdate="forceUpdate">
-      <keep-alive include="BooksList">
+      <keep-alive include="BooksComp">
         <component :is="Component" />
       </keep-alive>
     </router-view>

@@ -58,7 +58,7 @@
       </div>
       <hr />
 
-      <div>
+      <div v-if="ready">
         <div class="card-group">
           <transition-group class="p-3 d-flex flex-wrap" tag="div" appear name="books">
             <div v-for="b in books" :key="b.id">
@@ -91,6 +91,7 @@
           </transition-group>
         </div>
       </div>
+      <p v-else>Loading...</p>
     </div>
   </div>
 </template>
@@ -106,7 +107,7 @@ export default {
   setup(props, context) {
     let ready = ref(false)
     let currentFilter = ref(0)
-    const imgPath = ref(process.env.VUE_LITERAL_IMG_PATH)
+    const imgPath = ref(process.env.VUE_LITERAL_IMAGE_URL)
     let books = ref({})
 
     onMounted(() => {

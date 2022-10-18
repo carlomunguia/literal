@@ -2,8 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import AppBody from './../components/AppBody.vue'
 import UserLogin from './../components/UserLogin.vue'
 import BooksComp from './../components/BooksComp.vue'
-// import BooksList from './../components/BooksList.vue'
-import AppBook from './../components/AppBook.vue'
+import AppBookComp from './../components/AppBookComp.vue'
 import BooksAdmin from './../components/BooksAdmin.vue'
 import BookEdit from './../components/BookEdit.vue'
 import AppUsers from './../components/AppUsers.vue'
@@ -28,8 +27,8 @@ const routes = [
   },
   {
     path: '/books/:bookName',
-    name: 'AppBook',
-    component: AppBook
+    name: 'AppBookComp',
+    component: AppBookComp
   },
   {
     path: '/admin/books',
